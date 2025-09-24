@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Background Colors */
+    --color-background: #0F172A; /* slate-900 - cosmic depth */
+    --color-foreground: #F8FAFC; /* slate-50 - clear readability */
+    --color-card: #1E293B; /* slate-800 - subtle interface separation */
+    --color-card-foreground: #F8FAFC; /* slate-50 - clear readability */
+    --color-popover: #1E293B; /* slate-800 - subtle interface separation */
+    --color-popover-foreground: #F8FAFC; /* slate-50 - clear readability */
+    
+    /* Primary Colors */
+    --color-primary: #1E40AF; /* blue-800 - deep space authority */
+    --color-primary-foreground: #F8FAFC; /* slate-50 - clear readability */
+    --color-secondary: #7C3AED; /* violet-600 - innovation energy */
+    --color-secondary-foreground: #F8FAFC; /* slate-50 - clear readability */
+    
+    /* Accent Colors */
+    --color-accent: #F59E0B; /* amber-500 - mission critical alerts */
+    --color-accent-foreground: #0F172A; /* slate-900 - dark contrast */
+    
+    /* Muted Colors */
+    --color-muted: #334155; /* slate-700 - subtle backgrounds */
+    --color-muted-foreground: #94A3B8; /* slate-400 - hierarchy support */
+    
+    /* Border and Input */
+    --color-border: #475569; /* slate-600 - subtle separation */
+    --color-input: #1E293B; /* slate-800 - form backgrounds */
+    --color-ring: #1E40AF; /* blue-800 - focus indicators */
+    
+    /* Status Colors */
+    --color-success: #10B981; /* emerald-500 - mission accomplished */
+    --color-success-foreground: #F8FAFC; /* slate-50 - clear readability */
+    --color-warning: #F59E0B; /* amber-500 - launch window alerts */
+    --color-warning-foreground: #0F172A; /* slate-900 - dark contrast */
+    --color-error: #EF4444; /* red-500 - system alerts */
+    --color-error-foreground: #F8FAFC; /* slate-50 - clear readability */
+    --color-destructive: #EF4444; /* red-500 - system alerts */
+    --color-destructive-foreground: #F8FAFC; /* slate-50 - clear readability */
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .mission-glow {
+    box-shadow: 0 0 20px rgba(30, 64, 175, 0.3);
+  }
+  
+  .countdown-pulse {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  .orbital-rotate {
+    animation: orbital-spin 20s linear infinite;
+  }
+  
+  .data-stream {
+    background: linear-gradient(90deg, transparent, rgba(30, 64, 175, 0.1), transparent);
+    animation: data-flow 3s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(245, 158, 11, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes orbital-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes data-flow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
