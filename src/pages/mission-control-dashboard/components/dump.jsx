@@ -1,43 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-import { database } from "../../../api/firebaseConfig";
-import { ref, onValue, off } from "firebase/database";
-import { set } from 'date-fns';
+// import { database } from "../../../api/firebaseConfig";
+// import { ref, onValue, off } from "firebase/database";
+// import { set } from 'date-fns';
 
 const MissionOverview = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const dataRef = ref(database, "data");
+  // useEffect(() => {
+  //   const dataRef = ref(database, "data");
 
-    const unsubscribe = onValue(
-      dataRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          setData(snapshot.val());
-          console.log("Firebase data fetched successfully", snapshot.val());
-          setMissionStats(prevStats => ({
-            Latitude: snapshot.val().lat,
-            Longitude: snapshot.val().long,
-            Altitude: snapshot.val().alt,
-            Status: snapshot.val().state,
-            Pressure: 72,
-            Speed: 43 
-          }));
-        }
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Firebase read failed: ", error);
-        setLoading(false);
-      }
-    );
-    return () => {
-      off(dataRef, "value", unsubscribe);
-    };
-  }, []);
+  //   const unsubscribe = onValue(
+  //     dataRef,
+  //     (snapshot) => {
+  //       if (snapshot.exists()) {
+  //         setData(snapshot.val());
+  //         console.log("Firebase data fetched successfully", snapshot.val());
+  //         setMissionStats(prevStats => ({
+  //           Latitude: snapshot.val().lat,
+  //           Longitude: snapshot.val().long,
+  //           Altitude: snapshot.val().alt,
+  //           Status: snapshot.val().state,
+  //           Pressure: 72,
+  //           Speed: 43 
+  //         }));
+  //       }
+  //       setLoading(false);
+  //     },
+  //     (error) => {
+  //       console.error("Firebase read failed: ", error);
+  //       setLoading(false);
+  //     }
+  //   );
+  //   return () => {
+  //     off(dataRef, "value", unsubscribe);
+  //   };
+  // }, []);
 
   const [missionStats, setMissionStats] = useState({
     Latitude: 47,
