@@ -1,17 +1,18 @@
-Time-UTC
+.Time-UTC
 Elapsed seconds
-Connection Status
+.Connection Status
 
 Actuation Status
 
-Altitude-P
+.Altitude-P
 Pressure
 Temperature 
 Humidity
 
 Altitude-GPS
-Latitude
-Longitude
+.Latitude
+.Longitude
+
 Vertical velocity
 Lateral velocity
 
