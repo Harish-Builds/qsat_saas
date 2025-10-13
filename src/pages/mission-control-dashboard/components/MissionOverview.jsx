@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
+import Footer from "../../mission-control-dashboard/components/Footer"
+import FooterControl from '../../mission-control-dashboard/components/FooterControl';
+import MonitorControl from "../../launch-event-hub/components/MonitorControl"
 import Button from '../../../components/ui/Button';
 import { database } from "../../../api/firebaseConfig";
 import { ref, onValue, off } from "firebase/database";
@@ -188,11 +191,15 @@ const MissionOverview = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-b from-card/50 to-background">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Icon name="Command" size={24} className="text-primary" />
+    <div>
+      <Footer />
+      <FooterControl />
+      <MonitorControl />
+      <section className="py-20 bg-gradient-to-b from-card/50 to-background">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Icon name="Command" size={24} className="text-primary" />
             <span className="text-sm font-mono text-primary uppercase tracking-wider">
               Mission Overview
             </span>
@@ -399,6 +406,7 @@ const MissionOverview = () => {
         </div>
       </div>
     </section>
+    </div>
   );
 };
 

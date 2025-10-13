@@ -1,0 +1,25 @@
+Time-UTC
+Elapsed seconds
+Connection Status
+
+Actuation Status
+
+Altitude-P
+Pressure
+Temperature 
+Humidity
+
+Altitude-GPS
+Latitude
+Longitude
+Vertical velocity
+Lateral velocity
+
+Gyro-X
+Gyro-Y
+Gyro-Z
+Accelerometer-X,
+Accelerometer-Y,
+Accelerometer-Z,
+
+

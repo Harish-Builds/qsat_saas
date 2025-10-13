@@ -79,16 +79,16 @@ const MissionControlDashboard = () => {
           <MissionStatusBar />
           
           {/* Hero Section */}
-          <HeroSection />
+          {/* <HeroSection /> */}
           
           {/* Live Data Visualization */}
-          <LiveDataVisualization />
+          {/* <LiveDataVisualization /> */}
           
           {/* Mission Overview */}
           <MissionOverview />
           
           {/* Footer */}
-          <Footer />
+          {/* <Footer /> */}
         </main>
       </div>
     </>

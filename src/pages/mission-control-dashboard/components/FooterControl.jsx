@@ -2,14 +2,13 @@
 import React from "react";
 import Icon from "../../../components/AppIcon";
 import Button from "../../../components/ui/Button";
-import ButtonNew from "../../launch-event-hub/components/ButtonNew"
 import { useState } from "react";
 import { useEffect } from "react";
 import { database } from "../../../api/firebaseConfig";
 import { ref, onValue, off } from "firebase/database";
 
 
-const Footer = () => {
+const FooterControl = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,7 +17,6 @@ const Footer = () => {
       long: 12,
       alt: 2847.5,
       state: 1250,
-      time: "00:00:00"
   });
   
     useEffect(() => {
@@ -92,7 +90,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-card/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-6 py-4">
         {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-6">
@@ -208,7 +206,7 @@ const Footer = () => {
         </div> */}
 
         <div className="bg-muted/20 rounded-2xl p-6 mb-8 border border-border">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="text-xl font-bold font-mono text-primary mb-1">{missionStats?.lat}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
@@ -233,17 +231,9 @@ const Footer = () => {
                 Status
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-xl font-bold font-mono text-secondary mb-1">{missionStats?.state}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Latest Time
-              </div>
-            </div>
           </div>
         </div>
-
         
-        <ButtonNew />
 
         {/* <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border">
           <div className="flex items-center space-x-6 mb-4 md:mb-0">
@@ -296,4 +286,4 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+export default FooterControl;
