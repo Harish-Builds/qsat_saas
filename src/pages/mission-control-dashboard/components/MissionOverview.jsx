@@ -195,7 +195,7 @@ const MissionOverview = () => {
       <Footer />
       <FooterControl />
       <MonitorControl />
-      <section className="py-20 bg-gradient-to-b from-card/50 to-background">
+      {/* <section className="py-20 bg-gradient-to-b from-card/50 to-background">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center space-x-2 mb-4">
@@ -212,7 +212,6 @@ const MissionOverview = () => {
           </p>
         </div>
 
-        {/* Mission Statistics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {missionCards?.map((card, index) => (
             <div 
@@ -245,10 +244,9 @@ const MissionOverview = () => {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Recent Activities */}
+        {/* <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 border border-border">
               <div className="flex items-center justify-between mb-6">
@@ -297,9 +295,7 @@ const MissionOverview = () => {
             </div>
           </div>
 
-          {/* Quick Actions & Navigation */}
           <div className="space-y-6">
-            {/* Quick Actions */}
             <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 border border-border">
               <div className="flex items-center space-x-2 mb-6">
                 <Icon name="Zap" size={20} className="text-accent" />
@@ -348,8 +344,6 @@ const MissionOverview = () => {
                 </Button>
               </div>
             </div>
-
-            {/* Mission Navigation */}
             <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-6 border border-border">
               <div className="flex items-center space-x-2 mb-6">
                 <Icon name="Navigation" size={20} className="text-secondary" />
@@ -403,9 +397,9 @@ const MissionOverview = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
+        </div> */}
+      {/* </div>
+    </section> */}
     </div>
   );
 };
