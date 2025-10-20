@@ -9,6 +9,7 @@ import MissionControlDashboard from './pages/mission-control-dashboard';
 import StudentInnovationShowcase from './pages/student-innovation-showcase';
 import LaunchEventHub from './pages/launch-event-hub';
 import RecoveryOperations from './pages/recovery-operations';
+import MissionControl from "pages/launch-event-hub/components/MonitorControl";
 
 const Routes = () => {
   return (
@@ -17,7 +18,7 @@ const Routes = () => {
       <ScrollToTop />
       <RouterRoutes>
         {/* Define your route here */}
-        <Route path="/" element={<FlightDataCenter />} />
+        <Route path="/" element={<MissionControlDashboard />} />
         <Route path="/flight-data-center" element={<FlightDataCenter />} />
         <Route path="/participant-portal" element={<ParticipantPortal />} />
         <Route path="/mission-control-dashboard" element={<MissionControlDashboard />} />

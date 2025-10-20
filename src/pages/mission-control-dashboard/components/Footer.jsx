@@ -207,7 +207,7 @@ const Footer = () => {
           </div>
         </div> */}
 
-        <div className="bg-muted/20 rounded-2xl p-6 mb-8 border border-border">
+        <div className="bg-muted/20 rounded-2xl p-6 mb-8 border border-border shadow-orange-400/80 shadow-md">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div className="text-center">
               <div className="text-xl font-bold font-mono text-primary mb-1">{missionStats?.lat}</div>

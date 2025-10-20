@@ -29,7 +29,7 @@ const LaunchEventHub = () => {
         
         <main className="pt-16">
           {/* Hero Section with Countdown and Live Stream */}
-          <HeroSection />
+          {/* <HeroSection /> */}
           
           {/* Event Details with Tabs */}
           <EventDetailsSection />

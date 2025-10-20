@@ -5,6 +5,11 @@ import {
   Pause,
   Trash2,
   Database,
+  ArrowUpZA,
+  Thermometer,
+  ThermometerSun,
+  SwitchCamera,
+  CloudFog,
   Activity,
 } from "lucide-react";
 import Icon from "../../../components/AppIcon";
@@ -152,7 +157,7 @@ const MissionControl = () => {
     Latitude: 47,
     Longitude: 12,
     Altitude: 2847.5,
-    Status: 1250,
+    Status: 1,
     Pressure: 94.7,
     Speed: 15847,
   });
@@ -171,50 +176,50 @@ const MissionControl = () => {
 
   const missionCards = [
     {
-      title: "Latitude",
-      value: missionStats?.Latitude,
-      unit: "",
-      icon: "Rocket",
-      color: "primary",
-      trend: "+3 this month",
-    },
-    {
-      title: "Longitude",
-      value: missionStats?.Longitude,
-      unit: "",
-      icon: "Satellite",
-      color: "success",
-      trend: "All operational",
-    },
-    {
-      title: "Altitude",
-      value: missionStats?.Altitude?.toFixed(1),
-      unit: "GB",
-      icon: "Database",
-      color: "accent",
-      trend: "+12.3% today",
-    },
-    {
-      title: "Status",
-      value: missionStats?.Status?.toLocaleString(),
-      unit: "",
-      icon: "Users",
-      color: "secondary",
-      trend: "+45 this week",
-    },
-    {
       title: "Pressure",
-      value: missionStats?.Pressure,
+      value: missionStats?.Latitude,
+      unit: "hPa",
+      icon: "CloudFog",
+      color: "primary",
+      trend: "",
+    },
+    {
+      title: "Temperature",
+      value: missionStats?.Longitude,
+      unit: "°K",
+      icon: "Thermometer",
+      color: "accent",
+      trend: "In Operating range",
+    },
+    {
+      title: "Humidity",
+      value: missionStats?.Altitude?.toFixed(1),
       unit: "%",
-      icon: "TrendingUp",
+      icon: "ThermometerSun",
+      color: "success",
+      trend: "",
+    },
+    {
+      title: "Actuator",
+      value: missionStats?.Status?.toLocaleString(),
+      unit: "ON",
+      icon: "SwitchCamera",
+      color: "secondary",
+      trend: "Actuation Started",
+    },
+    {
+      title: "Vertical Velocity",
+      value: missionStats?.Pressure,
+      unit: "m/s",
+      icon: "ArrowUpZA",
       color: "success",
       trend: "Industry leading",
     },
     {
-      title: "Speed",
+      title: "Lateral Velocity",
       value: missionStats?.Speed?.toLocaleString(),
-      unit: "hrs",
-      icon: "Clock",
+      unit: "m/s",
+      icon: "TrendingUp",
       color: "primary",
       trend: "Continuous",
     },
@@ -292,8 +297,8 @@ const MissionControl = () => {
         ))}
       </div> */}
 
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 py-4 sm:py-8 min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-4xl">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 md:py-0 sm:py-8 flex items-center justify-center">
+          <div className="w-full max-w-8xl">
             {/* Serial Monitor */}
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
               <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-700 bg-slate-900/80">
@@ -322,7 +327,7 @@ const MissionControl = () => {
                 </div>
               </div>
 
-              <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] bg-black">
+              <div className="relative h-[300px] sm:h-[400px] lg:h-[600px] bg-black">
                 <div
                   ref={monitorRef}
                   className="absolute inset-0 overflow-y-auto p-3 sm:p-4 font-mono text-xs sm:text-sm scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"

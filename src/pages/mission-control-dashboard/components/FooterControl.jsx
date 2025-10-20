@@ -206,7 +206,7 @@ const FooterControl = () => {
         </div> */}
 
         <div className="bg-muted/20 rounded-2xl p-6 mb-8 border border-border">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div className="text-center">
               <div className="text-xl font-bold font-mono text-primary mb-1">{missionStats?.lat}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
@@ -229,6 +229,12 @@ const FooterControl = () => {
               <div className="text-xl font-bold font-mono text-secondary mb-1">{missionStats?.state}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Status
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold font-mono text-secondary mb-1">{missionStats?.state}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Latest Time
               </div>
             </div>
           </div>

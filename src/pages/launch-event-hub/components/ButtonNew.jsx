@@ -12,7 +12,7 @@ const ButtonNew = ({ variant, children }) => {
 
   return (
     <div className="flex justify-center gap-4">
-      <Button variant="outline">Connect</Button>
+      <Button variant="outline">Record</Button>
       <Button variant="destructive">Update</Button>
     </div>
   );
