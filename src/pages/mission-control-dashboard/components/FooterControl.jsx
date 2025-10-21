@@ -4,289 +4,94 @@ import Icon from "../../../components/AppIcon";
 import Button from "../../../components/ui/Button";
 import { useState } from "react";
 import { useEffect } from "react";
-import { database } from "../../../api/firebaseConfig";
-import { ref, onValue, off } from "firebase/database";
 
-
-const FooterControl = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+const FooterControl = ({ latitude, longitude, altitude, status }) => {
   const [missionStats, setMissionStats] = useState({
-      lat: 47,
-      long: 12,
-      alt: 2847.5,
-      state: 1250,
+    lat: 0,
+    long: 0,
+    alt: 0,
+    state: 0,
   });
-  
-    useEffect(() => {
-      const dataRef = ref(database, "data");
-  
-      const unsubscribe = onValue(
-        dataRef,
-        (snapshot) => {
-          if (snapshot.exists()) {
-            setData(snapshot.val());
-            console.log("Firebase data fetched successfully", snapshot.val());
-            // setMissionStats({
-            //   Latitude: snapshot.val().lat,
-            //   Longitude: snapshot.val().long,
-            //   Altitude: snapshot.val().alt,
-            //   Status: snapshot.val().state,
-            //   Pressure: 72,
-            //   Speed: 43
-            // });
-            setMissionStats(snapshot.val());
-            console.log("Mission stats updated successfully", missionStats);
-          }
-          setLoading(false);
-        },
-        (error) => {
-          console.error("Firebase read failed: ", error);
-          setLoading(false);
-        }
-      );
-      return () => {
-        off(dataRef, "value", unsubscribe);
-      };
-    }, []);
-  
+
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('en-US', { hour12: false }));
+
+  // Update mission stats when props change
+  useEffect(() => {
+    setMissionStats({
+      lat: latitude,
+      long: longitude,
+      alt: altitude,
+      state: status,
+    });
+  }, [latitude, longitude, altitude, status]);
+
+  // Update time every second
+  useEffect(() => {
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString('en-US', { hour12: false }));
+    }, 1000);
+
+    return () => clearInterval(timeInterval);
+  }, []);
 
   const currentYear = new Date()?.getFullYear();
-
-  const footerLinks = {
-    mission: [
-      { name: "Mission Control", href: "/mission-control-dashboard" },
-      { name: "Launch Hub", href: "/launch-event-hub" },
-      { name: "Flight Data", href: "/flight-data-center" },
-      { name: "Recovery Ops", href: "/recovery-operations" },
-    ],
-    education: [
-      { name: "Student Showcase", href: "/student-innovation-showcase" },
-      { name: "Participant Portal", href: "/participant-portal" },
-      { name: "Learning Resources", href: "#" },
-      { name: "Certification", href: "#" },
-    ],
-    support: [
-      { name: "Documentation", href: "#" },
-      { name: "API Reference", href: "#" },
-      { name: "Ground Control", href: "#" },
-      { name: "Emergency Contact", href: "#" },
-    ],
-    legal: [
-      { name: "Privacy Policy", href: "#" },
-      { name: "Terms of Service", href: "#" },
-      { name: "Data Protection", href: "#" },
-      { name: "Compliance", href: "#" },
-    ],
-  };
-
-  const socialLinks = [
-    { name: "Twitter", icon: "Twitter", href: "#" },
-    { name: "GitHub", icon: "Github", href: "#" },
-    { name: "LinkedIn", icon: "Linkedin", href: "#" },
-    { name: "YouTube", icon: "Youtube", href: "#" },
-  ];
 
   return (
     <footer className="bg-card/95 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 py-4">
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
-          <div className="lg:col-span-2">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center mission-glow">
-                  <Icon
-                    name="Satellite"
-                    size={28}
-                    className="text-primary-foreground"
-                  />
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-success rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">
-                  QSAT Event Hub
-                </h3>
-                <p className="text-sm text-muted-foreground font-mono">
-                  Mission Control Center
-                </p>
-              </div>
-            </div>
-
-            <p className="text-muted-foreground mb-6 leading-relaxed">
-              Democratizing space technology through student innovation and
-              hands-on learning. Making satellite technology accessible to
-              everyone, one mission at a time.
-            </p>
-
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
-              <span className="text-sm font-mono text-success">
-                MISSION ACTIVE
-              </span>
-            </div>
-
-            <Button variant="default" iconName="UserPlus" iconPosition="left">
-              Join Mission
-            </Button>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
-              Mission Centers
-            </h4>
-            <ul className="space-y-3">
-              {footerLinks?.mission?.map((link) => (
-                <li key={link?.name}>
-                  <a
-                    href={link?.href}
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                  >
-                    {link?.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
-              Education
-            </h4>
-            <ul className="space-y-3">
-              {footerLinks?.education?.map((link) => (
-                <li key={link?.name}>
-                  <a
-                    href={link?.href}
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                  >
-                    {link?.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
-              Support
-            </h4>
-            <ul className="space-y-3">
-              {footerLinks?.support?.map((link) => (
-                <li key={link?.name}>
-                  <a
-                    href={link?.href}
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                  >
-                    {link?.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
-              Legal
-            </h4>
-            <ul className="space-y-3">
-              {footerLinks?.legal?.map((link) => (
-                <li key={link?.name}>
-                  <a
-                    href={link?.href}
-                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
-                  >
-                    {link?.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div> */}
-
         <div className="bg-muted/20 rounded-2xl p-6 mb-8 border border-border">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div className="text-center">
-              <div className="text-xl font-bold font-mono text-primary mb-1">{missionStats?.lat}</div>
+              <div className="text-xl font-bold font-mono text-primary mb-1">
+                {latitude !== undefined && latitude !== null 
+                  ? (typeof latitude === 'string' ? parseFloat(latitude).toFixed(6) : Number(latitude).toFixed(6))
+                  : '0.000000'}
+              </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Latitude
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold font-mono text-success mb-1">{missionStats?.long}</div>
+              <div className="text-xl font-bold font-mono text-success mb-1">
+                {longitude !== undefined && longitude !== null 
+                  ? (typeof longitude === 'string' ? parseFloat(longitude).toFixed(6) : Number(longitude).toFixed(6))
+                  : '0.000000'}
+              </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Longitude
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold font-mono text-accent mb-1">{missionStats?.alt}</div>
+              <div className="text-xl font-bold font-mono text-accent mb-1">
+                {altitude !== undefined && altitude !== null 
+                  ? (typeof altitude === 'string' ? parseFloat(altitude).toFixed(1) : Number(altitude).toFixed(1))
+                  : '0.0'}
+              </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Altitude
+                Altitude (m)
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold font-mono text-secondary mb-1">{missionStats?.state}</div>
+              <div className="flex items-center justify-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${status === 1 || status === '1' ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
+                <div className="text-xl font-bold font-mono text-secondary mb-1">
+                  {(status === 1 || status === '1') ? 'ACTIVE' : 'STANDBY'}
+                </div>
+              </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Status
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold font-mono text-secondary mb-1">{missionStats?.state}</div>
+              <div className="text-xl font-bold font-mono text-secondary mb-1">
+                {currentTime}
+              </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Latest Time
               </div>
             </div>
           </div>
         </div>
-        
-
-        {/* <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border">
-          <div className="flex items-center space-x-6 mb-4 md:mb-0">
-            <p className="text-sm text-muted-foreground">
-              © {currentYear} QSAT Event Hub. All rights reserved.
-            </p>
-            <div className="flex items-center space-x-2">
-              <Icon name="Shield" size={16} className="text-success" />
-              <span className="text-xs text-success font-mono">
-                SECURE CONNECTION
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground mr-2">
-              Follow Mission:
-            </span>
-            {socialLinks?.map((social) => (
-              <a
-                key={social?.name}
-                href={social?.href}
-                className="p-2 rounded-lg bg-muted/30 hover:bg-primary/20 hover:text-primary transition-all duration-200"
-                title={social?.name}
-              >
-                <Icon name={social?.icon} size={18} />
-              </a>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-border/50">
-          <div className="flex items-center justify-center space-x-4 text-center">
-            <div className="flex items-center space-x-2">
-              <Icon name="AlertCircle" size={16} className="text-error" />
-              <span className="text-sm text-muted-foreground">
-                Emergency Mission Control:
-              </span>
-            </div>
-            <a
-              href="tel:+1-800-QSAT-911"
-              className="text-sm font-mono text-error hover:text-error/80 transition-colors"
-            >
-              +1-800-QSAT-911
-            </a>
-          </div>
-        </div> */}
       </div>
     </footer>
   );

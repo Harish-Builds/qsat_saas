@@ -11,14 +11,63 @@ import {
   SwitchCamera,
   CloudFog,
   Activity,
+  TrendingUp,
 } from "lucide-react";
 import Icon from "../../../components/AppIcon";
+import FooterControl from "pages/mission-control-dashboard/components/FooterControl";
 
 const MissionControl = () => {
   const [dataLog, setDataLog] = useState([]);
   const [isMonitoring, setIsMonitoring] = useState(true);
   const [dataCount, setDataCount] = useState(0);
   const monitorRef = useRef(null);
+  const [isRunning, setIsRunning] = useState(true);
+
+  const [missionStats, setMissionStats] = useState({
+    latitude: 0,
+    longitude: 0,
+    altitude: 0,
+    status: 0,
+    pressure: 0,
+    humidity: 0,
+    temperature: 0,
+    actuator: 0,
+    vvelocity: 0,
+    lvelocity: 0,
+  });
+
+  // Generate random mission stats when isRunning is true
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const generateRandomData = () => {
+      const newStats = {
+        latitude: parseFloat((Math.random() * 180 - 90).toFixed(6)),
+        longitude: parseFloat((Math.random() * 360 - 180).toFixed(6)),
+        altitude: parseFloat((Math.random() * 10000).toFixed(1)),
+        status: Math.random() > 0.5 ? 1 : 0,
+        pressure: parseFloat((Math.random() * 1000).toFixed(1)),
+        humidity: parseFloat((Math.random() * 100).toFixed(1)),
+        temperature: parseFloat((Math.random() * 100).toFixed(1)),
+        actuator: Math.random() > 0.5 ? 1 : 0,
+        vvelocity: parseFloat((Math.random() * 100).toFixed(1)),
+        lvelocity: parseFloat((Math.random() * 100).toFixed(1)),
+      };
+      
+      setMissionStats(newStats);
+      console.log('Mission stats updated:', newStats);
+    };
+
+    // Initial generation
+    generateRandomData();
+
+    // Set interval for continuous updates
+    const interval = setInterval(() => {
+      generateRandomData();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isRunning]);
 
   const missionDataTemplates = [
     {
@@ -71,7 +120,7 @@ const MissionControl = () => {
     },
   ];
 
-  // Generate real-time data
+  // Generate real-time data log
   useEffect(() => {
     if (!isMonitoring) return;
 
@@ -153,39 +202,18 @@ const MissionControl = () => {
     }
   };
 
-  const [missionStats, setMissionStats] = useState({
-    Latitude: 47,
-    Longitude: 12,
-    Altitude: 2847.5,
-    Status: 1,
-    Pressure: 94.7,
-    Speed: 15847,
-  });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMissionStats((prev) => ({
-        ...prev,
-        dataCollected: prev?.dataCollected + Math.random() * 0.5,
-        orbitalTime: prev?.orbitalTime + 1,
-      }));
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const missionCards = [
     {
       title: "Pressure",
-      value: missionStats?.Latitude,
+      value: missionStats?.pressure,
       unit: "hPa",
       icon: "CloudFog",
       color: "primary",
-      trend: "",
+      trend: "Atmospheric",
     },
     {
       title: "Temperature",
-      value: missionStats?.Longitude,
+      value: missionStats?.temperature,
       unit: "°K",
       icon: "Thermometer",
       color: "accent",
@@ -193,35 +221,35 @@ const MissionControl = () => {
     },
     {
       title: "Humidity",
-      value: missionStats?.Altitude?.toFixed(1),
+      value: missionStats?.humidity,
       unit: "%",
       icon: "ThermometerSun",
       color: "success",
-      trend: "",
+      trend: "Nominal",
     },
     {
       title: "Actuator",
-      value: missionStats?.Status?.toLocaleString(),
-      unit: "ON",
+      value: missionStats?.actuator,
+      unit: missionStats?.actuator === 1 ? "ON" : "OFF",
       icon: "SwitchCamera",
       color: "secondary",
-      trend: "Actuation Started",
+      trend: missionStats?.actuator === 1 ? "Actuation Started" : "Standby",
     },
     {
       title: "Vertical Velocity",
-      value: missionStats?.Pressure,
+      value: missionStats?.vvelocity,
       unit: "m/s",
       icon: "ArrowUpZA",
       color: "success",
-      trend: "Industry leading",
+      trend: "Ascending",
     },
     {
       title: "Lateral Velocity",
-      value: missionStats?.Speed?.toLocaleString(),
+      value: missionStats?.lvelocity,
       unit: "m/s",
       icon: "TrendingUp",
       color: "primary",
-      trend: "Continuous",
+      trend: "Tracking",
     },
   ];
 
@@ -280,23 +308,8 @@ const MissionControl = () => {
           </div>
         ))}
       </div>
-      <div className="relative min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
-        {/* Animated Stars Background */}
-        {/* <div className="absolute inset-0">
-        {[...Array(50)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div> */}
 
+      <div className="relative min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
         <div className="relative z-10 container mx-auto px-4 sm:px-6 md:py-0 sm:py-8 flex items-center justify-center">
           <div className="w-full max-w-8xl">
             {/* Serial Monitor */}
@@ -422,6 +435,17 @@ const MissionControl = () => {
                   >
                     <Download size={16} className="text-cyan-400" />
                   </button>
+                  <button
+                    onClick={() => setIsRunning(!isRunning)}
+                    className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
+                      isRunning
+                        ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                        : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                    }`}
+                    title={isRunning ? "Stop Data Generation" : "Start Data Generation"}
+                  >
+                    {isRunning ? "RUNNING" : "STOPPED"}
+                  </button>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-xs">
                   <span className="text-gray-500 flex items-center">
@@ -456,6 +480,14 @@ const MissionControl = () => {
           }
         `}</style>
       </div>
+
+      {/* Footer Control with first 4 parameters - NOW UPDATES IN REAL-TIME */}
+      {/* <FooterControl 
+        latitude={missionStats.latitude}
+        longitude={missionStats.longitude}
+        altitude={missionStats.altitude}
+        status={missionStats.status}
+      /> */}
     </>
   );
 };

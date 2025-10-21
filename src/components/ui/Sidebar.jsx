@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
 import LoginModal from './LoginModal';
+// import MissionTimeline from 'pages/recovery-operations/components/MissionTimeline';
 
 const Sidebar = ({ isCollapsed = false, onToggle, className = '' }) => {
   const [missionData, setMissionData] = useState({
@@ -97,7 +98,7 @@ const Sidebar = ({ isCollapsed = false, onToggle, className = '' }) => {
       <aside className={`fixed left-0 top-16 bottom-0 z-40 bg-card/95 backdrop-blur-md border-r border-border transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-72'
       } ${className}`}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-30">
           {/* Toggle Button */}
           <div className="flex items-center justify-between p-4 border-b border-border">
             {!isCollapsed && (
@@ -153,12 +154,12 @@ const Sidebar = ({ isCollapsed = false, onToggle, className = '' }) => {
               </a>
             ))}
           </nav>
-
+          {/* <MissionTimeline /> */}
           {/* Mission Data Panel */}
           {!isCollapsed && (
             <div className="p-4 border-t border-border">
               <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-                <div className="flex items-center space-x-2 mb-3">
+                {/* <div className="flex items-center space-x-2 mb-3">
                   <Icon name="Satellite" size={16} className="text-primary" />
                   <span className="text-sm font-mono text-primary">LIVE TELEMETRY</span>
                 </div>
@@ -195,7 +196,7 @@ const Sidebar = ({ isCollapsed = false, onToggle, className = '' }) => {
                     <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
                     <span className="text-xs font-mono text-success">SIGNAL STRONG</span>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           )}

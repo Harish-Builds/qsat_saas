@@ -108,12 +108,13 @@ const MissionTimeline = () => {
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <Icon name="Clock" size={20} className="text-primary" />
-            <h3 className="text-lg font-semibold text-card-foreground">Mission Timeline</h3>
+    <div className="bg-card rounded-lg border border-border h-full flex flex-col shadow-sm">
+      {/* Header - Fixed at Top */}
+      <div className="p-3 sm:p-4 border-b border-border flex-shrink-0 bg-card">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Icon name="Clock" size={18} className="text-primary flex-shrink-0" />
+            <h3 className="text-base sm:text-lg font-semibold text-card-foreground">Mission Timeline</h3>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
@@ -124,10 +125,10 @@ const MissionTimeline = () => {
         </div>
 
         {/* Mission Progress Bar */}
-        <div className="mb-6">
+        <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">Mission Progress</span>
-            <span className="text-sm font-mono text-foreground">
+            <span className="text-xs sm:text-sm text-muted-foreground">Mission Progress</span>
+            <span className="text-xs sm:text-sm font-mono text-foreground">
               {Math.round((activePhase / timelineEvents?.length) * 100)}%
             </span>
           </div>
@@ -139,63 +140,79 @@ const MissionTimeline = () => {
           </div>
         </div>
       </div>
-      {/* Timeline Events */}
-      <div className="p-4">
+
+      {/* Timeline Events - Scrollable Area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent hover:scrollbar-thumb-muted">
         <div className="relative">
-          {/* Timeline Line */}
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border"></div>
+          {/* Timeline Vertical Line */}
+          <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-border via-primary/30 to-border"></div>
           
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {timelineEvents?.map((event, index) => (
-              <div key={event?.id} className="relative flex items-start space-x-4">
+              <div key={event?.id} className="relative flex items-start space-x-3 sm:space-x-4">
                 {/* Timeline Node */}
-                <div className={`relative z-10 w-16 h-16 rounded-full border-2 flex items-center justify-center ${getStatusBg(event?.status)}`}>
+                <div className={`relative z-10 w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 ${getStatusBg(event?.status)}`}>
                   <Icon 
                     name={event?.icon} 
-                    size={20} 
-                    className={getStatusColor(event?.status)}
+                    size={18} 
+                    className={`${getStatusColor(event?.status)} transition-colors duration-300`}
                   />
                   {event?.status === 'active' && (
-                    <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping"></div>
+                    <>
+                      <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping"></div>
+                      <div className="absolute inset-0 rounded-full border-2 border-primary/50 animate-pulse"></div>
+                    </>
                   )}
                 </div>
 
-                {/* Event Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      <h4 className="text-sm font-semibold text-foreground">
-                        {event?.title}
-                      </h4>
-                      <span className={`px-2 py-1 rounded-full text-xs font-mono ${
-                        event?.status === 'completed' ? 'bg-success/20 text-success' :
-                        event?.status === 'active'? 'bg-primary/20 text-primary' : 'bg-muted/20 text-muted-foreground'
-                      }`}>
-                        {event?.phase}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {event?.time}
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {event?.description}
-                  </p>
-                  
-                  <div className="flex items-center space-x-4 text-xs">
-                    <div className="flex items-center space-x-1">
-                      <Icon name="Clock" size={12} className="text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        {formatTimeElapsed(event?.timestamp)}
-                      </span>
-                    </div>
-                    {event?.status === 'active' && (
-                      <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                        <span className="text-primary font-medium">In Progress</span>
+                {/* Event Content Card */}
+                <div className="flex-1 min-w-0 pb-2">
+                  <div className="bg-muted/20 rounded-lg p-3 border border-border/50 hover:border-border transition-all duration-200">
+                    {/* Title Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-sm font-semibold text-foreground leading-tight">
+                          {event?.title}
+                        </h4>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-mono whitespace-nowrap ${
+                          event?.status === 'completed' ? 'bg-success/20 text-success border border-success/30' :
+                          event?.status === 'active'? 'bg-primary/20 text-primary border border-primary/30' : 
+                          'bg-muted/30 text-muted-foreground border border-border'
+                        }`}>
+                          {event?.phase}
+                        </span>
                       </div>
-                    )}
+                      <div className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                        {event?.time}
+                      </div>
+                    </div>
+                    
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+                      {event?.description}
+                    </p>
+                    
+                    {/* Footer Info */}
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs">
+                      <div className="flex items-center space-x-1">
+                        <Icon name="Clock" size={12} className="text-muted-foreground flex-shrink-0" />
+                        <span className="text-muted-foreground">
+                          {formatTimeElapsed(event?.timestamp)}
+                        </span>
+                      </div>
+                      {event?.status === 'active' && (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                          <span className="text-primary font-medium">In Progress</span>
+                        </div>
+                      )}
+                      {event?.status === 'completed' && (
+                        <div className="flex items-center space-x-1">
+                          <Icon name="CheckCircle" size={12} className="text-success" />
+                          <span className="text-success font-medium">Complete</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -203,26 +220,29 @@ const MissionTimeline = () => {
           </div>
         </div>
       </div>
-      {/* Next Milestone */}
-      <div className="p-4 border-t border-border bg-muted/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Icon name="Target" size={16} className="text-warning" />
-            <div>
-              <div className="text-sm font-semibold text-foreground">Next Milestone</div>
-              <div className="text-xs text-muted-foreground">
+
+      {/* Next Milestone Footer - Fixed at Bottom */}
+      <div className="p-3 sm:p-4 border-t border-border bg-gradient-to-br from-muted/20 to-muted/5 flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+            <Icon name="Target" size={16} className="text-warning flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                Next Milestone
+              </div>
+              <div className="text-xs text-muted-foreground truncate">
                 {timelineEvents?.find(e => e?.status === 'pending')?.title || 'Mission Complete'}
               </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-sm font-mono text-foreground">
+          <div className="text-right flex-shrink-0">
+            <div className="text-xs sm:text-sm font-mono text-foreground">
               {timelineEvents?.find(e => e?.status === 'pending')?.time || 'Complete'}
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground whitespace-nowrap">
               {timelineEvents?.find(e => e?.status === 'pending') ? 
                 formatTimeElapsed(timelineEvents?.find(e => e?.status === 'pending')?.timestamp) : 
-                'All phases complete'
+                'All phases'
               }
             </div>
           </div>

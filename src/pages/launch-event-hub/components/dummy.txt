@@ -1,0 +1,11 @@
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setMissionStats((prev) => ({
+  //       ...prev,
+  //       dataCollected: prev?.dataCollected + Math.random() * 0.5,
+  //       orbitalTime: prev?.orbitalTime + 1,
+  //     }));
+  //   }, 10000);
+
+  //   return () => clearInterval(interval);
+  // }, []);
