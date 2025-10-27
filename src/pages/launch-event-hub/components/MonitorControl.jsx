@@ -12,16 +12,23 @@ import {
   CloudFog,
   Activity,
   TrendingUp,
+  Wifi,
+  WifiOff,
+  AlertCircle,
 } from "lucide-react";
 import Icon from "../../../components/AppIcon";
 import FooterControl from "pages/mission-control-dashboard/components/FooterControl";
 
 const MissionControl = () => {
   const [dataLog, setDataLog] = useState([]);
-  const [isMonitoring, setIsMonitoring] = useState(true);
+  const [isMonitoring, setIsMonitoring] = useState(true); // Controls data reception
   const [dataCount, setDataCount] = useState(0);
   const monitorRef = useRef(null);
-  const [isRunning, setIsRunning] = useState(true);
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+  
+  // Connection status: 'disconnected', 'connecting', 'connected', 'error'
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   const [missionStats, setMissionStats] = useState({
     latitude: 0,
@@ -36,176 +43,358 @@ const MissionControl = () => {
     lvelocity: 0,
   });
 
-  // Generate random mission stats when isRunning is true
+  // WebSocket connection management
   useEffect(() => {
-    if (!isRunning) return;
+    const WS_URL = 'ws://localhost:8080';
+    
+    const connectWebSocket = () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
 
-    const generateRandomData = () => {
-      const newStats = {
-        latitude: parseFloat((Math.random() * 180 - 90).toFixed(6)),
-        longitude: parseFloat((Math.random() * 360 - 180).toFixed(6)),
-        altitude: parseFloat((Math.random() * 10000).toFixed(1)),
-        status: Math.random() > 0.5 ? 1 : 0,
-        pressure: parseFloat((Math.random() * 1000).toFixed(1)),
-        humidity: parseFloat((Math.random() * 100).toFixed(1)),
-        temperature: parseFloat((Math.random() * 100).toFixed(1)),
-        actuator: Math.random() > 0.5 ? 1 : 0,
-        vvelocity: parseFloat((Math.random() * 100).toFixed(1)),
-        lvelocity: parseFloat((Math.random() * 100).toFixed(1)),
-      };
-      
-      setMissionStats(newStats);
-      console.log('Mission stats updated:', newStats);
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+
+      try {
+        console.log('Attempting to connect to WebSocket...');
+        setConnectionStatus('connecting');
+        
+        const ws = new WebSocket(WS_URL);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          console.log('✓ WebSocket connected successfully');
+          setConnectionStatus('connected');
+        };
+
+        ws.onmessage = (event) => {
+          // Only process messages if monitoring is active
+          if (!isMonitoring) {
+            console.log('Data received but monitoring is paused');
+            return;
+          }
+
+          try {
+            const message = JSON.parse(event.data);
+            
+            switch (message.type) {
+              case 'SERIAL_DATA':
+                handleSerialData(message);
+                break;
+              
+              case 'CONNECTION':
+                console.log('Bridge message:', message.message);
+                break;
+              
+              case 'SYSTEM_STATUS':
+                console.log('System status:', message.message);
+                addSystemLog(message.message, 'SYSTEM_STATUS');
+                break;
+              
+              case 'ERROR':
+                console.error('Serial error:', message.message);
+                addSystemLog(message.message, 'ERROR');
+                break;
+              
+              default:
+                console.log('Unknown message type:', message.type);
+            }
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setConnectionStatus('error');
+        };
+
+        ws.onclose = (event) => {
+          console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
+          setConnectionStatus('disconnected');
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log('Attempting to reconnect...');
+            connectWebSocket();
+          }, 3000);
+        };
+
+      } catch (error) {
+        console.error('Failed to create WebSocket connection:', error);
+        setConnectionStatus('error');
+        reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
+      }
     };
 
-    // Initial generation
-    generateRandomData();
+    connectWebSocket();
 
-    // Set interval for continuous updates
-    const interval = setInterval(() => {
-      generateRandomData();
-    }, 1000);
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []); // Only connect once on mount
 
-    return () => clearInterval(interval);
-  }, [isRunning]);
+  // Parse Arduino serial data
+  const parseArduinoData = (rawData) => {
+    const result = {
+      type: 'TELEMETRY',
+      values: {},
+      sensorData: {}
+    };
 
-  const missionDataTemplates = [
-    {
-      type: "TELEMETRY",
-      data: () => ({
-        altitude: (400 + Math.random() * 50).toFixed(2),
-        velocity: (7.5 + Math.random() * 0.5).toFixed(2),
-        temperature: (-20 + Math.random() * 10).toFixed(1),
-      }),
-    },
-    {
-      type: "SYSTEM_STATUS",
-      data: () => ({
-        battery: (85 + Math.random() * 15).toFixed(1),
-        solar_panels: Math.random() > 0.5 ? "ACTIVE" : "CHARGING",
-        communication: "NOMINAL",
-      }),
-    },
-    {
-      type: "ATTITUDE",
-      data: () => ({
-        roll: (Math.random() * 360).toFixed(2),
-        pitch: (Math.random() * 360).toFixed(2),
-        yaw: (Math.random() * 360).toFixed(2),
-      }),
-    },
-    {
-      type: "GPS_POSITION",
-      data: () => ({
-        latitude: (Math.random() * 180 - 90).toFixed(6),
-        longitude: (Math.random() * 360 - 180).toFixed(6),
-        accuracy: (Math.random() * 5).toFixed(2),
-      }),
-    },
-    {
-      type: "PAYLOAD_DATA",
-      data: () => ({
-        sensor_1: (Math.random() * 100).toFixed(2),
-        sensor_2: (Math.random() * 100).toFixed(2),
-        status: "COLLECTING",
-      }),
-    },
-    {
-      type: "GROUND_STATION",
-      data: () => ({
-        signal_strength: (-80 + Math.random() * 20).toFixed(1),
-        data_rate: (9600 + Math.random() * 400).toFixed(0),
-        station_id: `GS_${Math.floor(Math.random() * 5) + 1}`,
-      }),
-    },
-  ];
+    try {
+      // Try JSON first
+      if (rawData.trim().startsWith('{')) {
+        try {
+          const jsonData = JSON.parse(rawData);
+          Object.keys(jsonData).forEach(key => {
+            result.values[key] = jsonData[key];
+            mapToSensorData(key, jsonData[key], result);
+          });
+          return result;
+        } catch (e) {
+          // Not valid JSON, continue with other parsing
+        }
+      }
 
-  // Generate real-time data log
-  useEffect(() => {
-    if (!isMonitoring) return;
+      // Parse comma-separated key:value pairs
+      const pairs = rawData.split(',');
+      let hasParsedData = false;
+      
+      pairs.forEach(pair => {
+        const colonIndex = pair.indexOf(':');
+        if (colonIndex > 0) {
+          const key = pair.substring(0, colonIndex).trim();
+          const value = pair.substring(colonIndex + 1).trim();
+          
+          if (key && value) {
+            result.values[key] = value;
+            mapToSensorData(key, value, result);
+            hasParsedData = true;
+          }
+        }
+      });
 
-    const interval = setInterval(() => {
-      const template =
-        missionDataTemplates[
-          Math.floor(Math.random() * missionDataTemplates.length)
-        ];
-      const timestamp = new Date();
-      const dataValues = template.data();
+      if (!hasParsedData) {
+        result.values.message = rawData;
+        result.type = 'RAW_DATA';
+      }
 
-      const newEntry = {
-        id: Date.now(),
-        timestamp: timestamp.toISOString(),
-        timeFormatted: timestamp.toLocaleTimeString("en-US", { hour12: false }),
-        type: template.type,
-        ...dataValues,
-        raw: JSON.stringify(dataValues),
-      };
+    } catch (error) {
+      console.error('Error parsing Arduino data:', error);
+      result.values.message = rawData;
+      result.type = 'RAW_DATA';
+    }
 
-      setDataLog((prev) => [...prev, newEntry]);
-      setDataCount((prev) => prev + 1);
+    return result;
+  };
 
+  // Map parsed keys to mission stats
+  const mapToSensorData = (key, value, result) => {
+    const keyLower = key.toLowerCase();
+    const keyMap = {
+      'lat': 'latitude',
+      'latitude': 'latitude',
+      'lon': 'longitude',
+      'longitude': 'longitude',
+      'lng': 'longitude',
+      'alt': 'altitude',
+      'altitude': 'altitude',
+      'temp': 'temperature',
+      'temperature': 'temperature',
+      'hum': 'humidity',
+      'humidity': 'humidity',
+      'press': 'pressure',
+      'pressure': 'pressure',
+      'vvel': 'vvelocity',
+      'vvelocity': 'vvelocity',
+      'lvel': 'lvelocity',
+      'lvelocity': 'lvelocity',
+      'actuator': 'actuator',
+      'status': 'status',
+    };
+    
+    if (keyMap[keyLower]) {
+      const mappedKey = keyMap[keyLower];
+      const numValue = parseFloat(value);
+      result.sensorData[mappedKey] = isNaN(numValue) ? value : numValue;
+    }
+  };
+
+  // Handle incoming serial data
+  const handleSerialData = (message) => {
+    const data = message.data;
+    const timestamp = new Date(message.timestamp);
+    
+    const parsedData = parseArduinoData(data);
+    
+    // Update mission stats if we have sensor data
+    if (Object.keys(parsedData.sensorData).length > 0) {
+      setMissionStats(prev => ({
+        ...prev,
+        ...parsedData.sensorData
+      }));
+    }
+
+    // Create log entry
+    const newEntry = {
+      id: Date.now() + Math.random(),
+      timestamp: timestamp.toISOString(),
+      timeFormatted: timestamp.toLocaleTimeString("en-US", { hour12: false }),
+      type: parsedData.type,
+      raw: data,
+      ...parsedData.values,
+    };
+
+    setDataLog((prev) => [...prev, newEntry]);
+    setDataCount((prev) => prev + 1);
+
+    // Auto-scroll to bottom
+    setTimeout(() => {
       if (monitorRef.current) {
         monitorRef.current.scrollTop = monitorRef.current.scrollHeight;
       }
-    }, 1500);
+    }, 0);
+  };
 
-    return () => clearInterval(interval);
-  }, [isMonitoring]);
+  // Add system log messages
+  const addSystemLog = (message, type = 'SYSTEM_STATUS') => {
+    const timestamp = new Date();
+    const newEntry = {
+      id: Date.now() + Math.random(),
+      timestamp: timestamp.toISOString(),
+      timeFormatted: timestamp.toLocaleTimeString("en-US", { hour12: false }),
+      type: type,
+      raw: message,
+      message: message,
+    };
 
-  const exportToCSV = () => {
+    setDataLog((prev) => [...prev, newEntry]);
+    setDataCount((prev) => prev + 1);
+
+    setTimeout(() => {
+      if (monitorRef.current) {
+        monitorRef.current.scrollTop = monitorRef.current.scrollHeight;
+      }
+    }, 0);
+  };
+
+  // BUTTON FUNCTIONS
+
+  // Pause/Resume button - Toggles data reception
+  const handlePauseResume = () => {
+    setIsMonitoring(!isMonitoring);
+    if (!isMonitoring) {
+      console.log('▶️ Monitoring resumed - Data reception active');
+      addSystemLog('Monitoring resumed', 'SYSTEM_STATUS');
+    } else {
+      console.log('⏸️ Monitoring paused - Data reception stopped');
+      addSystemLog('Monitoring paused', 'SYSTEM_STATUS');
+    }
+  };
+
+  // Clear/Delete button - Resets everything to initial state
+  const handleClear = () => {
+    if (window.confirm("Clear all logged data and reset mission stats?")) {
+      console.log('🗑️ Clearing all data...');
+      
+      // Reset data log
+      setDataLog([]);
+      setDataCount(0);
+      
+      // Reset mission stats to zero
+      setMissionStats({
+        latitude: 0,
+        longitude: 0,
+        altitude: 0,
+        status: 0,
+        pressure: 0,
+        humidity: 0,
+        temperature: 0,
+        actuator: 0,
+        vvelocity: 0,
+        lvelocity: 0,
+      });
+      
+      // Resume monitoring if it was paused
+      setIsMonitoring(true);
+      
+      console.log('✓ All data cleared - Ready to receive new data');
+      addSystemLog('All data cleared - Starting fresh', 'SYSTEM_STATUS');
+    }
+  };
+
+  // Export to CSV - Downloads all logged data
+  const handleExportCSV = () => {
     if (dataLog.length === 0) {
-      alert("No data to export");
+      alert("No data to export. Start collecting data first!");
       return;
     }
 
-    const allKeys = new Set();
-    dataLog.forEach((entry) => {
-      Object.keys(entry).forEach((key) => {
-        if (key !== "id" && key !== "raw") allKeys.add(key);
+    try {
+      console.log(`📥 Exporting ${dataLog.length} entries to CSV...`);
+
+      // Collect all unique keys from all log entries
+      const allKeys = new Set();
+      dataLog.forEach((entry) => {
+        Object.keys(entry).forEach((key) => {
+          if (key !== "id") allKeys.add(key);
+        });
       });
-    });
 
-    const headers = Array.from(allKeys);
-    const csvContent = [
-      headers.join(","),
-      ...dataLog.map((entry) =>
-        headers
-          .map((header) => {
-            const value = entry[header] || "";
-            return typeof value === "string" &&
-              (value.includes(",") || value.includes('"'))
-              ? `"${value.replace(/"/g, '""')}"`
-              : value;
-          })
-          .join(",")
-      ),
-    ].join("\n");
+      const headers = Array.from(allKeys);
+      
+      // Create CSV content
+      const csvContent = [
+        headers.join(","),
+        ...dataLog.map((entry) =>
+          headers
+            .map((header) => {
+              const value = entry[header] || "";
+              // Escape values that contain commas or quotes
+              return typeof value === "string" &&
+                (value.includes(",") || value.includes('"'))
+                ? `"${value.replace(/"/g, '""')}"`
+                : value;
+            })
+            .join(",")
+        ),
+      ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `qsat_mission_data_${new Date().toISOString().split("T")[0]}.csv`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const clearLog = () => {
-    if (window.confirm("Clear all logged data?")) {
-      setDataLog([]);
-      setDataCount(0);
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      
+      const filename = `arduino_data_${new Date().toISOString().split("T")[0]}_${new Date().getTime()}.csv`;
+      
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      
+      console.log(`✓ Data exported successfully: ${filename}`);
+      addSystemLog(`Exported ${dataLog.length} entries to ${filename}`, 'SYSTEM_STATUS');
+    } catch (error) {
+      console.error('❌ Error exporting CSV:', error);
+      alert('Failed to export data. Please try again.');
     }
   };
 
   const missionCards = [
     {
       title: "Pressure",
-      value: missionStats?.pressure,
+      value: typeof missionStats?.pressure === 'number' ? missionStats.pressure.toFixed(1) : 0,
       unit: "hPa",
       icon: "CloudFog",
       color: "primary",
@@ -213,15 +402,15 @@ const MissionControl = () => {
     },
     {
       title: "Temperature",
-      value: missionStats?.temperature,
-      unit: "°K",
+      value: typeof missionStats?.temperature === 'number' ? missionStats.temperature.toFixed(1) : 0,
+      unit: "°C",
       icon: "Thermometer",
       color: "accent",
       trend: "In Operating range",
     },
     {
       title: "Humidity",
-      value: missionStats?.humidity,
+      value: typeof missionStats?.humidity === 'number' ? missionStats.humidity.toFixed(1) : 0,
       unit: "%",
       icon: "ThermometerSun",
       color: "success",
@@ -229,7 +418,7 @@ const MissionControl = () => {
     },
     {
       title: "Actuator",
-      value: missionStats?.actuator,
+      value: missionStats?.actuator || 0,
       unit: missionStats?.actuator === 1 ? "ON" : "OFF",
       icon: "SwitchCamera",
       color: "secondary",
@@ -237,7 +426,7 @@ const MissionControl = () => {
     },
     {
       title: "Vertical Velocity",
-      value: missionStats?.vvelocity,
+      value: typeof missionStats?.vvelocity === 'number' ? missionStats.vvelocity.toFixed(1) : 0,
       unit: "m/s",
       icon: "ArrowUpZA",
       color: "success",
@@ -245,7 +434,7 @@ const MissionControl = () => {
     },
     {
       title: "Lateral Velocity",
-      value: missionStats?.lvelocity,
+      value: typeof missionStats?.lvelocity === 'number' ? missionStats.lvelocity.toFixed(1) : 0,
       unit: "m/s",
       icon: "TrendingUp",
       color: "primary",
@@ -256,13 +445,57 @@ const MissionControl = () => {
   const getTypeColor = (type) => {
     const colors = {
       TELEMETRY: "text-cyan-400",
-      SYSTEM_STATUS: "text-green-400",
-      ATTITUDE: "text-purple-400",
-      GPS_POSITION: "text-blue-400",
-      PAYLOAD_DATA: "text-yellow-400",
-      GROUND_STATION: "text-orange-400",
+      SERIAL_DATA: "text-green-400",
+      SYSTEM_STATUS: "text-blue-400",
+      RAW_DATA: "text-yellow-400",
+      ERROR: "text-red-400",
     };
     return colors[type] || "text-gray-400";
+  };
+
+  // Connection status badge component
+  const ConnectionBadge = () => {
+    const configs = {
+      connected: { 
+        icon: Wifi, 
+        color: "text-green-400", 
+        bg: "bg-green-500/20", 
+        text: "CONNECTED",
+        pulse: true
+      },
+      connecting: { 
+        icon: Wifi, 
+        color: "text-yellow-400", 
+        bg: "bg-yellow-500/20", 
+        text: "CONNECTING...",
+        pulse: true
+      },
+      disconnected: { 
+        icon: WifiOff, 
+        color: "text-red-400", 
+        bg: "bg-red-500/20", 
+        text: "DISCONNECTED",
+        pulse: false
+      },
+      error: { 
+        icon: AlertCircle, 
+        color: "text-orange-400", 
+        bg: "bg-orange-500/20", 
+        text: "ERROR",
+        pulse: false
+      },
+    };
+
+    const config = configs[connectionStatus] || configs.disconnected;
+    const IconComponent = config.icon;
+
+    return (
+      <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg ${config.bg}`}>
+        <div className={`w-2 h-2 rounded-full ${config.color.replace('text-', 'bg-')} ${config.pulse ? 'animate-pulse' : ''}`}></div>
+        <IconComponent size={14} className={config.color} />
+        <span className={`text-xs font-mono ${config.color}`}>{config.text}</span>
+      </div>
+    );
   };
 
   return (
@@ -318,25 +551,26 @@ const MissionControl = () => {
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <Activity size={18} className="text-cyan-400 sm:w-5 sm:h-5" />
                   <span className="text-xs sm:text-sm font-mono text-cyan-400 uppercase tracking-wide">
-                    Live Telemetry Stream
+                    Arduino Serial Monitor
                   </span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  {isMonitoring ? (
-                    <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <ConnectionBadge />
+                  {isMonitoring && connectionStatus === 'connected' ? (
+                    <div className="hidden sm:flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="text-xs font-mono text-green-400">
                         LIVE
                       </span>
                     </div>
-                  ) : (
-                    <div className="flex items-center space-x-2">
+                  ) : !isMonitoring ? (
+                    <div className="hidden sm:flex items-center space-x-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                       <span className="text-xs font-mono text-red-400">
                         PAUSED
                       </span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
@@ -352,7 +586,20 @@ const MissionControl = () => {
                   {dataLog.length === 0 ? (
                     <div className="text-gray-600 text-center py-12">
                       <Activity className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                      <p className="text-sm">Waiting for mission data...</p>
+                      <p className="text-sm">Waiting for Arduino data...</p>
+                      {connectionStatus !== 'connected' && (
+                        <div className="mt-4 space-y-2">
+                          <p className="text-xs text-red-400">
+                            WebSocket not connected
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Make sure the Node.js server is running on ws://localhost:8080
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Run: cd server && npm start
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-1">
@@ -376,25 +623,13 @@ const MissionControl = () => {
                               {entry.type}
                             </span>
                             <span className="text-gray-300 flex-1 break-all">
-                              {Object.entries(entry)
-                                .filter(
-                                  ([key]) =>
-                                    ![
-                                      "id",
-                                      "timestamp",
-                                      "timeFormatted",
-                                      "type",
-                                      "raw",
-                                    ].includes(key)
-                                )
-                                .map(([key, value]) => `${key}=${value}`)
-                                .join(" | ")}
+                              {entry.raw}
                             </span>
                           </div>
                         </div>
                       ))}
 
-                      {isMonitoring && (
+                      {isMonitoring && connectionStatus === 'connected' && (
                         <div className="flex items-center gap-2 text-gray-600 animate-pulse px-2 py-1">
                           <div className="w-1 h-1 bg-cyan-400 rounded-full animate-ping"></div>
                           <span>Receiving data...</span>
@@ -408,10 +643,15 @@ const MissionControl = () => {
               {/* Monitor Controls */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 px-3 sm:px-4 py-2 sm:py-3 border-t border-slate-700 bg-slate-900/50">
                 <div className="flex items-center gap-2">
+                  {/* Pause/Resume Button */}
                   <button
-                    onClick={() => setIsMonitoring(!isMonitoring)}
-                    className="p-1.5 rounded hover:bg-slate-800 transition-colors"
-                    title={isMonitoring ? "Pause" : "Resume"}
+                    onClick={handlePauseResume}
+                    className={`p-1.5 rounded transition-colors ${
+                      isMonitoring 
+                        ? 'hover:bg-red-900/30 bg-slate-800' 
+                        : 'hover:bg-green-900/30 bg-slate-800'
+                    }`}
+                    title={isMonitoring ? "Pause data reception" : "Resume data reception"}
                   >
                     {isMonitoring ? (
                       <Pause size={16} className="text-red-400" />
@@ -419,34 +659,28 @@ const MissionControl = () => {
                       <Play size={16} className="text-green-400" />
                     )}
                   </button>
+                  
+                  {/* Clear/Delete Button */}
                   <button
-                    onClick={clearLog}
-                    className="p-1.5 rounded hover:bg-slate-800 transition-colors"
-                    title="Clear Log"
-                    disabled={dataLog.length === 0}
+                    onClick={handleClear}
+                    className="p-1.5 rounded hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Clear all data and reset"
+                    disabled={dataLog.length === 0 && dataCount === 0}
                   >
-                    <Trash2 size={16} className="text-gray-400" />
+                    <Trash2 size={16} className="text-gray-400 hover:text-red-400" />
                   </button>
+                  
+                  {/* Download/Export Button */}
                   <button
-                    onClick={exportToCSV}
-                    className="p-1.5 rounded hover:bg-slate-800 transition-colors"
-                    title="Export CSV"
+                    onClick={handleExportCSV}
+                    className="p-1.5 rounded hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Export data to CSV"
                     disabled={dataLog.length === 0}
                   >
                     <Download size={16} className="text-cyan-400" />
                   </button>
-                  <button
-                    onClick={() => setIsRunning(!isRunning)}
-                    className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
-                      isRunning
-                        ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                        : "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                    }`}
-                    title={isRunning ? "Stop Data Generation" : "Start Data Generation"}
-                  >
-                    {isRunning ? "RUNNING" : "STOPPED"}
-                  </button>
                 </div>
+                
                 <div className="flex items-center gap-2 sm:gap-3 text-xs">
                   <span className="text-gray-500 flex items-center">
                     <Database size={12} className="inline mr-1" />
@@ -456,7 +690,7 @@ const MissionControl = () => {
                     <span className="xs:hidden">{dataCount}</span>
                   </span>
                   <span className="text-gray-500 hidden sm:inline">
-                    9600 baud
+                    115200 baud
                   </span>
                 </div>
               </div>
@@ -481,7 +715,7 @@ const MissionControl = () => {
         `}</style>
       </div>
 
-      {/* Footer Control with first 4 parameters - NOW UPDATES IN REAL-TIME */}
+      {/* Footer Control - uncomment if you want to use it */}
       {/* <FooterControl 
         latitude={missionStats.latitude}
         longitude={missionStats.longitude}
