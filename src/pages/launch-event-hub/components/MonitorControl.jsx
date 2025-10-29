@@ -17,17 +17,15 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Icon from "../../../components/AppIcon";
-import FooterControl from "pages/mission-control-dashboard/components/FooterControl";
 
 const MissionControl = () => {
   const [dataLog, setDataLog] = useState([]);
-  const [isMonitoring, setIsMonitoring] = useState(true); // Controls data reception
+  const [isMonitoring, setIsMonitoring] = useState(true);
   const [dataCount, setDataCount] = useState(0);
   const monitorRef = useRef(null);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   
-  // Connection status: 'disconnected', 'connecting', 'connected', 'error'
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   const [missionStats, setMissionStats] = useState({
@@ -58,21 +56,20 @@ const MissionControl = () => {
       }
 
       try {
-        console.log('Attempting to connect to WebSocket...');
+        console.log('🔌 Attempting to connect to WebSocket...');
         setConnectionStatus('connecting');
         
         const ws = new WebSocket(WS_URL);
         wsRef.current = ws;
 
         ws.onopen = () => {
-          console.log('✓ WebSocket connected successfully');
+          console.log('✅ WebSocket connected successfully');
           setConnectionStatus('connected');
         };
 
         ws.onmessage = (event) => {
-          // Only process messages if monitoring is active
           if (!isMonitoring) {
-            console.log('Data received but monitoring is paused');
+            console.log('⏸️ Data received but monitoring is paused');
             return;
           }
 
@@ -85,44 +82,44 @@ const MissionControl = () => {
                 break;
               
               case 'CONNECTION':
-                console.log('Bridge message:', message.message);
+                console.log('🌐 Bridge message:', message.message);
                 break;
               
               case 'SYSTEM_STATUS':
-                console.log('System status:', message.message);
+                console.log('📊 System status:', message.message);
                 addSystemLog(message.message, 'SYSTEM_STATUS');
                 break;
               
               case 'ERROR':
-                console.error('Serial error:', message.message);
+                console.error('❌ Serial error:', message.message);
                 addSystemLog(message.message, 'ERROR');
                 break;
               
               default:
-                console.log('Unknown message type:', message.type);
+                console.log('❓ Unknown message type:', message.type);
             }
           } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
+            console.error('❌ Error parsing WebSocket message:', error);
           }
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          console.error('❌ WebSocket error:', error);
           setConnectionStatus('error');
         };
 
         ws.onclose = (event) => {
-          console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
+          console.log('🔌 WebSocket disconnected. Code:', event.code);
           setConnectionStatus('disconnected');
           
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Attempting to reconnect...');
+            console.log('🔄 Attempting to reconnect...');
             connectWebSocket();
           }, 3000);
         };
 
       } catch (error) {
-        console.error('Failed to create WebSocket connection:', error);
+        console.error('❌ Failed to create WebSocket connection:', error);
         setConnectionStatus('error');
         reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
       }
@@ -138,7 +135,7 @@ const MissionControl = () => {
         wsRef.current.close();
       }
     };
-  }, []); // Only connect once on mount
+  }, []);
 
   // Parse Arduino serial data
   const parseArduinoData = (rawData) => {
@@ -153,13 +150,14 @@ const MissionControl = () => {
       if (rawData.trim().startsWith('{')) {
         try {
           const jsonData = JSON.parse(rawData);
+          console.log('📦 Parsed JSON data:', jsonData);
           Object.keys(jsonData).forEach(key => {
             result.values[key] = jsonData[key];
             mapToSensorData(key, jsonData[key], result);
           });
           return result;
         } catch (e) {
-          // Not valid JSON, continue with other parsing
+          console.log('⚠️ Not valid JSON, trying comma-separated format');
         }
       }
 
@@ -177,6 +175,7 @@ const MissionControl = () => {
             result.values[key] = value;
             mapToSensorData(key, value, result);
             hasParsedData = true;
+            console.log(`📊 Parsed ${key}: ${value}`);
           }
         }
       });
@@ -184,10 +183,13 @@ const MissionControl = () => {
       if (!hasParsedData) {
         result.values.message = rawData;
         result.type = 'RAW_DATA';
+        console.log('📝 Raw data (no key:value pairs found):', rawData);
+      } else {
+        console.log('✅ Successfully parsed sensor data:', result.sensorData);
       }
 
     } catch (error) {
-      console.error('Error parsing Arduino data:', error);
+      console.error('❌ Error parsing Arduino data:', error);
       result.values.message = rawData;
       result.type = 'RAW_DATA';
     }
@@ -224,6 +226,7 @@ const MissionControl = () => {
       const mappedKey = keyMap[keyLower];
       const numValue = parseFloat(value);
       result.sensorData[mappedKey] = isNaN(numValue) ? value : numValue;
+      console.log(`🎯 Mapped ${key} → ${mappedKey} = ${result.sensorData[mappedKey]}`);
     }
   };
 
@@ -232,14 +235,18 @@ const MissionControl = () => {
     const data = message.data;
     const timestamp = new Date(message.timestamp);
     
+    console.log('📡 Received serial data:', data);
+    
     const parsedData = parseArduinoData(data);
     
     // Update mission stats if we have sensor data
     if (Object.keys(parsedData.sensorData).length > 0) {
-      setMissionStats(prev => ({
-        ...prev,
-        ...parsedData.sensorData
-      }));
+      console.log('🔄 Updating mission stats with:', parsedData.sensorData);
+      setMissionStats(prev => {
+        const updated = { ...prev, ...parsedData.sensorData };
+        console.log('✅ Mission stats updated:', updated);
+        return updated;
+      });
     }
 
     // Create log entry
@@ -286,8 +293,6 @@ const MissionControl = () => {
   };
 
   // BUTTON FUNCTIONS
-
-  // Pause/Resume button - Toggles data reception
   const handlePauseResume = () => {
     setIsMonitoring(!isMonitoring);
     if (!isMonitoring) {
@@ -299,16 +304,13 @@ const MissionControl = () => {
     }
   };
 
-  // Clear/Delete button - Resets everything to initial state
   const handleClear = () => {
     if (window.confirm("Clear all logged data and reset mission stats?")) {
       console.log('🗑️ Clearing all data...');
       
-      // Reset data log
       setDataLog([]);
       setDataCount(0);
       
-      // Reset mission stats to zero
       setMissionStats({
         latitude: 0,
         longitude: 0,
@@ -322,15 +324,13 @@ const MissionControl = () => {
         lvelocity: 0,
       });
       
-      // Resume monitoring if it was paused
       setIsMonitoring(true);
       
-      console.log('✓ All data cleared - Ready to receive new data');
+      console.log('✅ All data cleared - Ready to receive new data');
       addSystemLog('All data cleared - Starting fresh', 'SYSTEM_STATUS');
     }
   };
 
-  // Export to CSV - Downloads all logged data
   const handleExportCSV = () => {
     if (dataLog.length === 0) {
       alert("No data to export. Start collecting data first!");
@@ -340,7 +340,6 @@ const MissionControl = () => {
     try {
       console.log(`📥 Exporting ${dataLog.length} entries to CSV...`);
 
-      // Collect all unique keys from all log entries
       const allKeys = new Set();
       dataLog.forEach((entry) => {
         Object.keys(entry).forEach((key) => {
@@ -350,14 +349,12 @@ const MissionControl = () => {
 
       const headers = Array.from(allKeys);
       
-      // Create CSV content
       const csvContent = [
         headers.join(","),
         ...dataLog.map((entry) =>
           headers
             .map((header) => {
               const value = entry[header] || "";
-              // Escape values that contain commas or quotes
               return typeof value === "string" &&
                 (value.includes(",") || value.includes('"'))
                 ? `"${value.replace(/"/g, '""')}"`
@@ -367,7 +364,6 @@ const MissionControl = () => {
         ),
       ].join("\n");
 
-      // Create and download file
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
@@ -383,7 +379,7 @@ const MissionControl = () => {
       
       URL.revokeObjectURL(url);
       
-      console.log(`✓ Data exported successfully: ${filename}`);
+      console.log(`✅ Data exported successfully: ${filename}`);
       addSystemLog(`Exported ${dataLog.length} entries to ${filename}`, 'SYSTEM_STATUS');
     } catch (error) {
       console.error('❌ Error exporting CSV:', error);
@@ -394,51 +390,51 @@ const MissionControl = () => {
   const missionCards = [
     {
       title: "Pressure",
-      value: typeof missionStats?.pressure === 'number' ? missionStats.pressure.toFixed(1) : 0,
+      value: typeof missionStats?.pressure === 'number' ? missionStats.pressure.toFixed(1) : '0.0',
       unit: "hPa",
       icon: "CloudFog",
       color: "primary",
-      trend: "Atmospheric",
+      trend: missionStats?.pressure > 0 ? "Atmospheric" : "Waiting...",
     },
     {
       title: "Temperature",
-      value: typeof missionStats?.temperature === 'number' ? missionStats.temperature.toFixed(1) : 0,
+      value: typeof missionStats?.temperature === 'number' ? missionStats.temperature.toFixed(1) : '0.0',
       unit: "°C",
       icon: "Thermometer",
       color: "accent",
-      trend: "In Operating range",
+      trend: missionStats?.temperature > 0 ? "In Operating range" : "Waiting...",
     },
     {
       title: "Humidity",
-      value: typeof missionStats?.humidity === 'number' ? missionStats.humidity.toFixed(1) : 0,
+      value: typeof missionStats?.humidity === 'number' ? missionStats.humidity.toFixed(1) : '0.0',
       unit: "%",
       icon: "ThermometerSun",
       color: "success",
-      trend: "Nominal",
+      trend: missionStats?.humidity > 0 ? "Nominal" : "Waiting...",
     },
     {
       title: "Actuator",
       value: missionStats?.actuator || 0,
       unit: missionStats?.actuator === 1 ? "ON" : "OFF",
       icon: "SwitchCamera",
-      color: "secondary",
+      color: missionStats?.actuator === 1 ? "success" : "secondary",
       trend: missionStats?.actuator === 1 ? "Actuation Started" : "Standby",
     },
     {
       title: "Vertical Velocity",
-      value: typeof missionStats?.vvelocity === 'number' ? missionStats.vvelocity.toFixed(1) : 0,
+      value: typeof missionStats?.vvelocity === 'number' ? missionStats.vvelocity.toFixed(1) : '0.0',
       unit: "m/s",
       icon: "ArrowUpZA",
       color: "success",
-      trend: "Ascending",
+      trend: missionStats?.vvelocity !== 0 ? "Ascending" : "Stationary",
     },
     {
       title: "Lateral Velocity",
-      value: typeof missionStats?.lvelocity === 'number' ? missionStats.lvelocity.toFixed(1) : 0,
+      value: typeof missionStats?.lvelocity === 'number' ? missionStats.lvelocity.toFixed(1) : '0.0',
       unit: "m/s",
       icon: "TrendingUp",
       color: "primary",
-      trend: "Tracking",
+      trend: missionStats?.lvelocity !== 0 ? "Tracking" : "Stationary",
     },
   ];
 
@@ -453,7 +449,6 @@ const MissionControl = () => {
     return colors[type] || "text-gray-400";
   };
 
-  // Connection status badge component
   const ConnectionBadge = () => {
     const configs = {
       connected: { 
@@ -532,7 +527,7 @@ const MissionControl = () => {
 
             <div className="flex items-center space-x-2">
               <div
-                className={`w-2 h-2 rounded-full bg-${card?.color} animate-pulse`}
+                className={`w-2 h-2 rounded-full bg-${card?.color} ${card?.value !== '0.0' && card?.value !== 0 ? 'animate-pulse' : ''}`}
               ></div>
               <span className="text-sm text-muted-foreground">
                 {card?.trend}
@@ -545,7 +540,6 @@ const MissionControl = () => {
       <div className="relative min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
         <div className="relative z-10 container mx-auto px-4 sm:px-6 md:py-0 sm:py-8 flex items-center justify-center">
           <div className="w-full max-w-8xl">
-            {/* Serial Monitor */}
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-2xl overflow-hidden shadow-2xl">
               <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-700 bg-slate-900/80">
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -640,10 +634,8 @@ const MissionControl = () => {
                 </div>
               </div>
 
-              {/* Monitor Controls */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 px-3 sm:px-4 py-2 sm:py-3 border-t border-slate-700 bg-slate-900/50">
                 <div className="flex items-center gap-2">
-                  {/* Pause/Resume Button */}
                   <button
                     onClick={handlePauseResume}
                     className={`p-1.5 rounded transition-colors ${
@@ -660,7 +652,6 @@ const MissionControl = () => {
                     )}
                   </button>
                   
-                  {/* Clear/Delete Button */}
                   <button
                     onClick={handleClear}
                     className="p-1.5 rounded hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
@@ -670,7 +661,6 @@ const MissionControl = () => {
                     <Trash2 size={16} className="text-gray-400 hover:text-red-400" />
                   </button>
                   
-                  {/* Download/Export Button */}
                   <button
                     onClick={handleExportCSV}
                     className="p-1.5 rounded hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
@@ -714,14 +704,6 @@ const MissionControl = () => {
           }
         `}</style>
       </div>
-
-      {/* Footer Control - uncomment if you want to use it */}
-      {/* <FooterControl 
-        latitude={missionStats.latitude}
-        longitude={missionStats.longitude}
-        altitude={missionStats.altitude}
-        status={missionStats.status}
-      /> */}
     </>
   );
 };
